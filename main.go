@@ -13,6 +13,9 @@ import (
 )
 
 const config_path string = "config.json"
+const clever_img string = "img/clever.png"
+const done_img string = "img/done.png"
+const loading_img string = "img/loading.png"
 
 type baseConfig struct {
 	Token  string `json:"token"`
@@ -85,14 +88,17 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 			case "start":
 				msg.Text = fmt.Sprintf("Привет %s! Доступные команды /teach, /check, /author", update.Message.From.String())
 			case "teach":
+				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, clever_img))
 				msg.Text = "Тут должен быть текст обучающего урока"
 			case "check":
+				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, done_img))
 				msg.Text = "Тут должен быть текст вопроса"
 			case "author":
 				msg.Text = "Arseniy Skurt @skurtars"
 			case "muse": // some easter egg here
 				msg.Text = "<3"
 			default:
+				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, loading_img))
 				msg.Text = "Попробуй /teach, /check или /author"
 			}
 		} else {

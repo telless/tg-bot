@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"encoding/json"
 	"io/ioutil"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 const config_path string = "config.json"
@@ -41,6 +44,14 @@ func main() {
 	}
 
 	updates := bot.ListenForWebhook("/" + bot.Token)
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
+	go func(c chan os.Signal) {
+		sig := <-c
+		log.Printf("Caught signal %s: shutting down.", sig)
+		os.Exit(0)
+	}(signals)
 
 	go http.ListenAndServe("0.0.0.0:3000", nil)
 	closeChan := make(chan bool)

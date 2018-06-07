@@ -12,14 +12,20 @@ import (
 	"fmt"
 )
 
-const config_path string = "config.json"
-const clever_img string = "img/clever.png"
-const done_img string = "img/done.png"
-const loading_img string = "img/loading.png"
+const configPath = "config.json"
+const cleverImgPath = "img/clever.png"
+const doneImgPath = "img/done.png"
+const loadingImgPath = "img/loading.png"
 
 type baseConfig struct {
 	Token  string `json:"token"`
 	Domain string `json:"domain"`
+}
+
+type pictures struct {
+	clever  []byte
+	done    []byte
+	loading []byte
 }
 
 func main() {
@@ -71,15 +77,18 @@ func main() {
 	// make closeChannel
 	closeChan := make(chan bool)
 
+	// prepare images
+	pictures := initPictures()
+
 	// run goroutine for processing inc messages
-	go processUpdates(bot, updates, closeChan)
+	go processUpdates(bot, updates, closeChan, pictures)
 
 	// end of application
 	<-closeChan
 }
 
 // process messages
-func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, closeChan chan bool) {
+func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, closeChan chan bool, pictures pictures) {
 	for update := range updates {
 		log.Printf("Get message %s from %s\n", update.Message.Text, update.Message.From.String())
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
@@ -88,20 +97,21 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 			case "start":
 				msg.Text = fmt.Sprintf("Привет %s! Доступные команды /teach, /check, /author", update.Message.From.String())
 			case "teach":
-				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, clever_img))
+				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, tgbotapi.FileBytes{Name: "clever.png", Bytes: pictures.clever}))
 				msg.Text = "Тут должен быть текст обучающего урока"
 			case "check":
-				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, done_img))
+				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, tgbotapi.FileBytes{Name: "done.png", Bytes: pictures.done}))
 				msg.Text = "Тут должен быть текст вопроса"
 			case "author":
 				msg.Text = "Arseniy Skurt @skurtars"
 			case "muse": // some easter egg here
 				msg.Text = "<3"
 			default:
-				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, loading_img))
+				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, tgbotapi.FileBytes{Name: "loading.png", Bytes: pictures.loading}))
 				msg.Text = "Попробуй /teach, /check или /author"
 			}
 		} else {
+			bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, tgbotapi.FileBytes{Name: "loading.png", Bytes: pictures.loading}))
 			msg.Text = "Попробуй /teach, /check или /author"
 		}
 		bot.Send(msg)
@@ -113,11 +123,30 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 // read config
 func parseConfig() baseConfig {
 	config := baseConfig{}
-	content, err := ioutil.ReadFile(config_path)
+	content, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	json.Unmarshal(content, &config)
 
 	return config
+}
+
+func initPictures() (pictures pictures) {
+	var err error
+
+	pictures.clever, err = ioutil.ReadFile(cleverImgPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pictures.done, err = ioutil.ReadFile(doneImgPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pictures.loading, err = ioutil.ReadFile(loadingImgPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return
 }

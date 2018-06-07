@@ -90,6 +90,8 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 				msg.Text = "Тут должен быть текст вопроса"
 			case "author":
 				msg.Text = "Arseniy Skurt @skurtars"
+			case "muse": // some easter egg here
+				msg.Text = "<3"
 			default:
 				msg.Text = "Попробуй /teach, /check или /author"
 			}

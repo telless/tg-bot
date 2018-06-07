@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 	"net/http"
+	"fmt"
 )
 
 const config_path string = "config.json"
@@ -72,16 +73,29 @@ func main() {
 
 	// end of application
 	<-closeChan
-
 }
 
 // process messages
 func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, closeChan chan bool) {
 	for update := range updates {
-		user := update.Message.From.FirstName + " " + update.Message.From.LastName + "(aka " + update.Message.From.UserName + ")"
-		log.Printf("Get message %s from %s\n", update.Message.Text, user)
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Hello "+user+", thx for "+update.Message.Text)
-
+		log.Printf("Get message %s from %s\n", update.Message.Text, update.Message.From.String())
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
+		if update.Message.IsCommand() {
+			switch update.Message.Command() {
+			case "start":
+				msg.Text = fmt.Sprintf("Привет %s! Доступные команды /teach, /check, /author", update.Message.From.String())
+			case "teach":
+				msg.Text = "Тут должен быть текст обучающего урока"
+			case "check":
+				msg.Text = "Тут должен быть текст вопроса"
+			case "author":
+				msg.Text = "Arseniy Skurt @skurtars"
+			default:
+				msg.Text = "Попробуй /teach, /check или /author"
+			}
+		} else {
+			msg.Text = "Попробуй /teach, /check или /author"
+		}
 		bot.Send(msg)
 	}
 

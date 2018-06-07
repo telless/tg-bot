@@ -1,4 +1,4 @@
 {
   "token": "Place_your_super_secret_token_here",
-  "domain": "https://your.domain.local"
+  "domain": "https://your.domain.local/"
 }

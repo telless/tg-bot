@@ -24,7 +24,7 @@ func main() {
 
 	bot.Debug = true
 
-	log.Printf("Authorized on account %s", bot.Self.UserName)
+	log.Printf("Authorized on account %s\n", bot.Self.UserName)
 
 	_, err = bot.SetWebhook(tgbotapi.NewWebhook(config.Domain + bot.Token))
 	if err != nil {
@@ -43,12 +43,25 @@ func main() {
 	updates := bot.ListenForWebhook("/" + bot.Token)
 
 	go http.ListenAndServe("0.0.0.0:3000", nil)
+	closeChan := make(chan bool)
+	go processUpdates(bot, updates, closeChan)
 
-	for update := range updates {
-		log.Printf("%+v\n", update)
-	}
+	<-closeChan
 
 }
+
+func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, closeChan chan bool) {
+	for update := range updates {
+		user := update.Message.From.FirstName + " " + update.Message.From.LastName + "(aka " + update.Message.From.UserName + ")"
+		log.Printf("Get message %s from %s\n", update.Message.Text, user)
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Hello "+user+", thx for "+update.Message.Text)
+
+		bot.Send(msg)
+	}
+
+	closeChan <- true
+}
+
 func parseConfig() baseConfig {
 	config := baseConfig{}
 	content, err := ioutil.ReadFile(config_path)

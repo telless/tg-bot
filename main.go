@@ -34,6 +34,7 @@ type pictures struct {
 type user struct {
 	id             int
 	username       string
+	fullName       string
 	lastLessonId   string
 	lastVisit      time.Time
 	hasAdminRights bool
@@ -43,6 +44,7 @@ type user struct {
 func (u *user) applyUpdate(update tgbotapi.Update) {
 	u.lastVisit = time.Now()
 	u.username = update.Message.From.String()
+	u.fullName = fmt.Sprintf("%s %s", update.Message.From.FirstName, update.Message.From.LastName)
 }
 
 var (
@@ -132,7 +134,7 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 				if update.Message.CommandArguments() == config.RootPass {
 					user.hasAdminRights = true
 					users[user.id] = user
-					msg.Text = fmt.Sprintf("Hello %s, you are admin now!", user.username)
+					msg.Text = fmt.Sprintf("Hello %s (%s), you are admin now!", user.fullName, user.username)
 				} else {
 					msg.Text = "Nice attempt retard"
 				}
@@ -141,8 +143,10 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 					msg.Text = "Trying to rebuild"
 					rebuild(update.Message.CommandArguments(), bot, update)
 				} else {
-					msg.Text = fmt.Sprintf("%+v attempt to rebuild with %s", user, update.Message.CommandArguments())
+					msg.Text = fmt.Sprintf("%+v attempt to rebuild with branch\tag %s", user, update.Message.CommandArguments())
 				}
+			case "whoami":
+				msg.Text = fmt.Sprintf("Hello %s (%s), here is your data %+v", user.fullName, user.username, user)
 			default:
 				bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, tgbotapi.FileBytes{Name: "loading.png", Bytes: pictures.loading}))
 				msg.Text = "Попробуй /teach, /check или /author"
@@ -165,6 +169,7 @@ func processUser(update tgbotapi.Update) user {
 		currentUser = user{
 			update.Message.From.ID,
 			update.Message.From.String(),
+			fmt.Sprintf("%s %s", update.Message.From.FirstName, update.Message.From.LastName),
 			"empty_string_currently",
 			time.Now(),
 			false,

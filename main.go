@@ -165,7 +165,6 @@ func processUser(update tgbotapi.Update) user {
 	if users[update.Message.From.ID].authorized {
 		currentUser = users[update.Message.From.ID]
 		currentUser.applyUpdate(update)
-		users[update.Message.From.ID] = currentUser
 	} else {
 		currentUser = user{
 			update.Message.From.ID,
@@ -176,8 +175,8 @@ func processUser(update tgbotapi.Update) user {
 			false,
 			true,
 		}
-		users[update.Message.From.ID] = currentUser
 	}
+	users[update.Message.From.ID] = currentUser
 
 	return currentUser
 }
@@ -206,7 +205,7 @@ func initPictures() (pictures pictures) {
 		log.Fatal(err)
 	}
 	pictures.loading, err = ioutil.ReadFile(loadingImgPath)
-	if err != nil {
+	if err != nil { 
 		log.Fatal(err)
 	}
 
@@ -220,9 +219,10 @@ func rebuild(branch string, bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		os.Stderr.WriteString(err.Error())
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, err.Error())
 		bot.Send(msg)
+	} else {
+		bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Successfully switched to %s and updated", branch)))
+		die("")
 	}
-	bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Successfully switched to %s and updated", branch)))
-	die("")
 }
 
 func die(sig interface{}) {

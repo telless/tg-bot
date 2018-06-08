@@ -135,12 +135,10 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 					user.hasAdminRights = true
 					users[user.id] = user
 					msg.Text = fmt.Sprintf("Hello %s (%s), you are admin now!", user.fullName, user.username)
-				} else {
-					msg.Text = "Nice attempt retard"
 				}
-			case "rebuild":
+			case "build":
 				if user.hasAdminRights && update.Message.CommandArguments() != "" {
-					msg.Text = "Trying to rebuild"
+					bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Trying to rebuild"))
 					rebuild(update.Message.CommandArguments(), bot, update)
 				} else {
 					msg.Text = fmt.Sprintf("%+v attempt to rebuild with branch\tag %s", user, update.Message.CommandArguments())
@@ -155,7 +153,9 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 			bot.Send(tgbotapi.NewPhotoUpload(update.Message.Chat.ID, tgbotapi.FileBytes{Name: "loading.png", Bytes: pictures.loading}))
 			msg.Text = "Попробуй /teach, /check или /author"
 		}
-		bot.Send(msg)
+		if msg.Text != "" {
+			bot.Send(msg)
+		}
 	}
 
 	closeChan <- true
@@ -165,7 +165,6 @@ func processUser(update tgbotapi.Update) user {
 	if users[update.Message.From.ID].authorized {
 		currentUser = users[update.Message.From.ID]
 		currentUser.applyUpdate(update)
-		users[update.Message.From.ID] = currentUser
 	} else {
 		currentUser = user{
 			update.Message.From.ID,
@@ -176,8 +175,8 @@ func processUser(update tgbotapi.Update) user {
 			false,
 			true,
 		}
-		users[update.Message.From.ID] = currentUser
 	}
+	users[update.Message.From.ID] = currentUser
 
 	return currentUser
 }
@@ -214,15 +213,16 @@ func initPictures() (pictures pictures) {
 }
 
 func rebuild(branch string, bot *tgbotapi.BotAPI, update tgbotapi.Update) {
-	cmd := exec.Command(fmt.Sprintf("git checkout %s && git pull && go build", branch))
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("git fetch --all && git checkout %s && git pull && go build", branch))
 	err := cmd.Run()
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, err.Error())
 		bot.Send(msg)
+	} else {
+		bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Successfully switched to %s and updated", branch)))
+		die("")
 	}
-	bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Successfully switched to %s and updated", branch)))
-	die("")
 }
 
 func die(sig interface{}) {

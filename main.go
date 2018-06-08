@@ -143,6 +143,8 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 				} else {
 					msg.Text = fmt.Sprintf("%+v attempt to rebuild with branch\tag %s", user, update.Message.CommandArguments())
 				}
+			case "test":
+				msg.Text = "Alloha!"
 			case "whoami":
 				msg.Text = fmt.Sprintf("Hello %s (%s), here is your data %+v", user.fullName, user.username, user)
 			default:

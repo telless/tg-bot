@@ -1,4 +1,5 @@
 {
-  "token": "Place_your_super_secret_token_here",
-  "domain": "https://your.domain.local/"
+  "token": "Place_your_super_secret_bot_token_here",
+  "domain": "https://your.domain.local/",
+  "root_pass": "Enter_here_your_manager_token"
 }

@@ -163,6 +163,7 @@ func processUpdates(bot *tgbotapi.BotAPI, updates tgbotapi.UpdatesChannel, close
 func processUser(update tgbotapi.Update) user {
 	currentUser := user{}
 	if users[update.Message.From.ID].authorized {
+		currentUser = users[update.Message.From.ID]
 		currentUser.applyUpdate(update)
 		users[update.Message.From.ID] = currentUser
 	} else {

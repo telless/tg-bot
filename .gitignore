@@ -1,3 +1,9 @@
+#config files
 config.json
+
 # builded files
 tg-bot
+
+# data files
+users.json
+lessons.json
